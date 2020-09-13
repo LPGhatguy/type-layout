@@ -1,0 +1,15 @@
+[package]
+name = "type-layout"
+description = "Derivable trait to view the layout of a struct, useful for debugging."
+version = "0.1.0"
+authors = ["Lucien Greathouse <me@lpghatguy.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+type-layout-derive = { version = "0.1.0", path = "type-layout-derive" }
+memoffset = "0.5"
+
+[workspace]
+members = ["type-layout-derive", "try-crate"]
