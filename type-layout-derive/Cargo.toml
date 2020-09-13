@@ -2,8 +2,10 @@
 name = "type-layout-derive"
 description = "Derive macro implementation for type-layout crate"
 version = "0.1.0"
-authors = ["Lucien Greathouse <me@lpghatguy.com>"]
 edition = "2018"
+authors = ["Lucien Greathouse <me@lpghatguy.com>"]
+homepage = "https://github.com/LPGhatguy/type-layout"
+license = "MIT OR Apache-2.0"
 
 [lib]
 proc-macro = true

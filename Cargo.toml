@@ -2,8 +2,14 @@
 name = "type-layout"
 description = "Derivable trait to view the layout of a struct, useful for debugging."
 version = "0.1.0"
-authors = ["Lucien Greathouse <me@lpghatguy.com>"]
 edition = "2018"
+authors = ["Lucien Greathouse <me@lpghatguy.com>"]
+documentation = "https://docs.rs/type-layout"
+homepage = "https://github.com/LPGhatguy/type-layout"
+repository = "https://github.com/LPGhatguy/type-layout"
+readme = "README.md"
+keywords = ["layout", "struct", "type"]
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
