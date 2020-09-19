@@ -1,7 +1,7 @@
 [package]
 name = "type-layout"
 description = "Derivable trait to view the layout of a struct, useful for debugging."
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 authors = ["Lucien Greathouse <me@lpghatguy.com>"]
 documentation = "https://docs.rs/type-layout"
@@ -20,7 +20,7 @@ serde1 = ["serde"]
 members = ["type-layout-derive", "try-crate"]
 
 [dependencies]
-type-layout-derive = { version = "0.1.0", path = "type-layout-derive" }
+type-layout-derive = { version = "0.2.0", path = "type-layout-derive" }
 
 memoffset = "0.5"
 serde = { version = "1.0.116", features = ["derive"], optional = true }
