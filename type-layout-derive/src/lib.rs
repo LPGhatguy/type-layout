@@ -28,7 +28,7 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
                 #layout
 
                 ::type_layout::TypeLayoutInfo {
-                    name: #name_str,
+                    name: ::std::borrow::Cow::Borrowed(#name_str),
                     size: std::mem::size_of::<#name>(),
                     alignment: ::std::mem::align_of::<#name>(),
                     fields,
@@ -64,8 +64,8 @@ fn layout_of_type(struct_name: &Ident, data: &Data) -> proc_macro2::TokenStream 
                             }
 
                             fields.push(::type_layout::Field::Field {
-                                name: #field_name_str,
-                                ty: #field_ty_str,
+                                name: ::std::borrow::Cow::Borrowed(#field_name_str),
+                                ty: ::std::borrow::Cow::Borrowed(#field_ty_str),
                                 size,
                             });
 

@@ -65,6 +65,7 @@ changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 */
 
+use std::borrow::Cow;
 use std::fmt::{self, Display};
 use std::str;
 
@@ -78,18 +79,20 @@ pub trait TypeLayout {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeLayoutInfo {
-    pub name: &'static str,
+    pub name: Cow<'static, str>,
     pub size: usize,
     pub alignment: usize,
     pub fields: Vec<Field>,
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub enum Field {
     Field {
-        name: &'static str,
-        ty: &'static str,
+        name: Cow<'static, str>,
+        ty: Cow<'static, str>,
         size: usize,
     },
     Padding {
