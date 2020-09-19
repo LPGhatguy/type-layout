@@ -28,7 +28,7 @@ struct Foo {
     b: u32,
 }
 
-println!("{}", Foo::layout());
+println!("{}", Foo::type_layout());
 // prints:
 // Foo (size 8, alignment 4)
 // | Offset | Name      | Size |
@@ -50,7 +50,7 @@ struct OverAligned {
     value: u8,
 }
 
-println!("{}", OverAligned::layout());
+println!("{}", OverAligned::type_layout());
 // prints:
 // OverAligned (size 128, alignment 128)
 // | Offset | Name      | Size |

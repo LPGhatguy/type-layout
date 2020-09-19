@@ -21,7 +21,7 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
     // Build the output, possibly using quasi-quotation
     let expanded = quote! {
         impl #impl_generics ::type_layout::TypeLayout for #name #ty_generics #where_clause {
-            fn layout() -> ::type_layout::TypeLayoutInfo {
+            fn type_layout() -> ::type_layout::TypeLayoutInfo {
                 let mut last_field_end = 0;
                 let mut fields = Vec::new();
 
