@@ -1,6 +1,7 @@
 # type-layout Changelog
 
 ## Unreleased Changes
+* Deriving `TypeLayout` now supports `#[type_layout(other_crate_path)]` for supporting crate renaming and aliasing.
 
 ## 0.2.0 (2020-09-18)
 * Added `serde1` feature, which enables Serde serialization and deserialization for the crate's types.
