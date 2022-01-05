@@ -7,6 +7,13 @@ struct Foo {
     b: u16,
 }
 
+#[derive(TypeLayout)]
+struct Bar {
+    a: u8,
+    b: u16,
+}
+
 fn main() {
-    println!("{}", Foo::layout());
+    println!("{}", Foo::type_layout());
+    println!("{}", Bar::type_layout());
 }
