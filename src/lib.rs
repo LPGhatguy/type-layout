@@ -119,6 +119,8 @@ impl fmt::Display for TypeLayoutInfo {
             .map(|field| field.name.len())
             .max()
             .unwrap_or(1)
+            // Relevant for tuple structs where the field names are single-character
+            .max("Name".len())
             .max(padding_header_length);
 
         let widths = RowWidths {
