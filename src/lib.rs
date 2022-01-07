@@ -85,6 +85,7 @@ pub struct TypeLayoutInfo {
     pub size: usize,
     pub alignment: usize,
     pub fields: Vec<Field>,
+    pub generics: Vec<Cow<'static, str>>,
 }
 
 #[derive(Debug)]
@@ -98,10 +99,14 @@ pub struct Field {
 
 impl fmt::Display for TypeLayoutInfo {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "{}", self.name)?;
+        if !self.generics.is_empty() {
+            write!(formatter, "<{}>", self.generics.join(", "))?;
+        }
         writeln!(
             formatter,
-            "{} (size {}, alignment {})",
-            self.name, self.size, self.alignment
+            " (size {}, alignment {})",
+            self.size, self.alignment
         )?;
 
         // Calculate the sum of all fields' sizes to detect if the

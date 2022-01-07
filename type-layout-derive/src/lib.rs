@@ -4,7 +4,9 @@ use proc_macro::TokenStream;
 
 use proc_macro2::{Ident, Literal};
 use quote::{quote, quote_spanned, ToTokens};
-use syn::{parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields, ImplGenerics};
+use syn::{
+    parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields, GenericParam, ImplGenerics,
+};
 
 #[proc_macro_derive(TypeLayout)]
 pub fn derive_type_layout(input: TokenStream) -> TokenStream {
@@ -18,10 +20,28 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let layout = layout_of_type(&name, &input.data, &impl_generics);
 
+    let generic_names = input.generics.params.iter().map(|f| match f {
+        GenericParam::Type(ty) => {
+            let ident = &ty.ident;
+            quote! {
+                ::std::borrow::Cow::Borrowed(std::any::type_name::<#ident>()),
+            }
+        }
+        GenericParam::Lifetime(lft) => {
+            let ident = format!("'{}", lft.lifetime.ident);
+            quote! {
+                ::std::borrow::Cow::Borrowed(#ident),
+            }
+        }
+        GenericParam::Const(_) => unimplemented!(),
+    });
+
     // Build the output, possibly using quasi-quotation
     let expanded = quote! {
         impl #impl_generics ::type_layout::TypeLayout for #name #ty_generics #where_clause {
             fn type_layout() -> ::type_layout::TypeLayoutInfo {
+                use ::std::borrow::Cow;
+
                 // Need to specify type since it's possible for the struct
                 // to have no fields, thus making "#layout" empty, resulting
                 // in inference failure.
@@ -31,11 +51,14 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
 
                 fields.sort_by_key(|f| f.offset);
 
+                let generics = vec![#(#generic_names)*];
+
                 ::type_layout::TypeLayoutInfo {
-                    name: ::std::borrow::Cow::Borrowed(#name_str),
+                    name: Cow::Borrowed(#name_str),
                     size: std::mem::size_of::<#name #impl_generics>(),
                     alignment: ::std::mem::align_of::<#name #impl_generics>(),
                     fields,
+                    generics,
                 }
             }
         }
