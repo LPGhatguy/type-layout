@@ -14,8 +14,11 @@ struct Bar {
 }
 
 #[derive(TypeLayout)]
-struct GenericStruct<T> {
-    f: T,
+struct GenericStruct<'a, T, const N: usize>
+where
+    T: 'a,
+{
+    f: &'a [T; N],
 }
 
 #[derive(TypeLayout)]
@@ -30,7 +33,7 @@ struct Empty;
 fn main() {
     println!("{}", Foo::type_layout());
     println!("{}", Bar::type_layout());
-    println!("{}", GenericStruct::<i32>::type_layout());
+    println!("{}", GenericStruct::<'static, i8, 5>::type_layout());
     println!("{}", TupleStruct::type_layout());
     println!("{}", GenericTupleStruct::<i8>::type_layout());
     println!("{}", Empty::type_layout());

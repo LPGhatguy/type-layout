@@ -5,7 +5,7 @@ use proc_macro::TokenStream;
 use proc_macro2::{Ident, Literal};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
-    parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields, GenericParam, ImplGenerics,
+    parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields, GenericParam, TypeGenerics,
 };
 
 #[proc_macro_derive(TypeLayout)]
@@ -18,7 +18,7 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
     let name_str = Literal::string(&name.to_string());
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let layout = layout_of_type(&name, &input.data, &impl_generics);
+    let layout = layout_of_type(&name, &input.data, &ty_generics);
 
     let generic_names = input.generics.params.iter().map(|f| match f {
         GenericParam::Type(ty) => {
@@ -33,7 +33,12 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
                 ::std::borrow::Cow::Borrowed(#ident),
             }
         }
-        GenericParam::Const(_) => unimplemented!(),
+        GenericParam::Const(cnst) => {
+            let name = &cnst.ident;
+            quote! {
+                ::std::borrow::Cow::Owned(format!("{}", #name)),
+            }
+        }
     });
 
     // Build the output, possibly using quasi-quotation
@@ -55,8 +60,8 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
 
                 ::type_layout::TypeLayoutInfo {
                     name: Cow::Borrowed(#name_str),
-                    size: std::mem::size_of::<#name #impl_generics>(),
-                    alignment: ::std::mem::align_of::<#name #impl_generics>(),
+                    size: std::mem::size_of::<#name #ty_generics>(),
+                    alignment: ::std::mem::align_of::<#name #ty_generics>(),
                     fields,
                     generics,
                 }
@@ -71,7 +76,7 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
 fn layout_of_type(
     struct_name: &Ident,
     data: &Data,
-    impl_generics: &ImplGenerics,
+    ty_generics: &TypeGenerics,
 ) -> proc_macro2::TokenStream {
     match data {
         Data::Struct(data) => match &data.fields {
@@ -86,7 +91,7 @@ fn layout_of_type(
                         #[allow(unused_assignments)]
                         {
                             let size = ::std::mem::size_of::<#field_ty>();
-                            let offset = ::type_layout::memoffset::offset_of!(#struct_name #impl_generics, #field_name);
+                            let offset = ::type_layout::memoffset::offset_of!(#struct_name #ty_generics, #field_name);
 
                             fields.push(::type_layout::Field {
                                 name: ::std::borrow::Cow::Borrowed(#field_name_str),
@@ -113,7 +118,7 @@ fn layout_of_type(
                         #[allow(unused_assignments)]
                         {
                             let size = ::std::mem::size_of::<#field_ty>();
-                            let offset = ::type_layout::memoffset::offset_of!(#struct_name #impl_generics, #index);
+                            let offset = ::type_layout::memoffset::offset_of!(#struct_name #ty_generics, #index);
 
                             fields.push(::type_layout::Field {
                                 name: ::std::borrow::Cow::Borrowed(#index_string),
