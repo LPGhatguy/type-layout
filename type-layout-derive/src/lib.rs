@@ -30,7 +30,7 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
                 fields.sort_by_key(|f| f.offset);
 
                 ::type_layout::TypeLayoutInfo {
-                    name: ::std::borrow::Cow::Borrowed(#name_str),
+                    name: ::std::borrow::Cow::Borrowed(::std::any::type_name::<Self>()),
                     size: std::mem::size_of::<#name #ty_generics>(),
                     alignment: ::std::mem::align_of::<#name #ty_generics>(),
                     fields,
