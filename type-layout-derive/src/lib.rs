@@ -3,7 +3,7 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 use proc_macro2::{Ident, Literal};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote, quote_spanned};
 use syn::{Data, DeriveInput, Fields, parse_macro_input, spanned::Spanned, TypeGenerics};
 
 #[proc_macro_derive(TypeLayout)]
@@ -13,7 +13,6 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
 
     // Used in the quasi-quotation below as `#name`.
     let name = input.ident;
-    let name_str = Literal::string(&name.to_string());
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let layout = layout_of_type(&name, &ty_generics, &input.data);
@@ -51,7 +50,6 @@ fn layout_of_type(struct_name: &Ident, ty_generics: &TypeGenerics, data: &Data) 
                     let field_name = field.ident.as_ref().unwrap();
                     let field_name_str = Literal::string(&field_name.to_string());
                     let field_ty = &field.ty;
-                    let field_ty_str = Literal::string(&field_ty.to_token_stream().to_string());
 
                     quote_spanned! { field.span() =>
                         #[allow(unused_assignments)]
