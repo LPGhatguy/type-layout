@@ -89,11 +89,15 @@ pub struct TypeLayoutInfo {
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
-pub struct Field {
-    pub name: Cow<'static, str>,
-    pub ty: Cow<'static, str>,
-    pub size: usize,
-    pub offset: usize,
+pub enum Field {
+    Field {
+        name: Cow<'static, str>,
+        ty: Cow<'static, str>,
+        size: usize,
+    },
+    Padding {
+        size: usize,
+    },
 }
 
 impl fmt::Display for TypeLayoutInfo {
@@ -104,22 +108,15 @@ impl fmt::Display for TypeLayoutInfo {
             self.name, self.size, self.alignment
         )?;
 
-        // Calculate the sum of all fields' sizes to detect if the
-        // struct is padded.
-        let fields_size: usize = self.fields.iter().map(|f| f.size).sum();
-        let padding_header_length = if fields_size < self.size {
-            "[padding]".len()
-        } else {
-            0
-        };
-
         let longest_name = self
             .fields
             .iter()
-            .map(|field| field.name.len())
+            .map(|field| match field {
+                Field::Field { name, .. } => name.len(),
+                Field::Padding { .. } => "[padding]".len(),
+            })
             .max()
-            .unwrap_or(1)
-            .max(padding_header_length);
+            .unwrap_or(1);
 
         let widths = RowWidths {
             offset: "Offset".len(),
@@ -150,41 +147,26 @@ impl fmt::Display for TypeLayoutInfo {
         let mut offset = 0;
 
         for field in &self.fields {
-            if field.offset > offset {
-                write_row(
-                    formatter,
-                    widths,
-                    Row {
-                        offset,
-                        name: "[padding]",
-                        size: field.offset - offset,
-                    },
-                )?;
+            match field {
+                Field::Field { name, size, .. } => {
+                    write_row(formatter, widths, Row { offset, name, size })?;
+
+                    offset += size;
+                }
+                Field::Padding { size } => {
+                    write_row(
+                        formatter,
+                        widths,
+                        Row {
+                            offset,
+                            name: "[padding]",
+                            size,
+                        },
+                    )?;
+
+                    offset += size;
+                }
             }
-
-            write_row(
-                formatter,
-                widths,
-                Row {
-                    offset: field.offset,
-                    name: &*field.name,
-                    size: field.size,
-                },
-            )?;
-            offset = field.offset + field.size;
-        }
-
-        // Handle tail padding.
-        if offset < self.size {
-            write_row(
-                formatter,
-                widths,
-                Row {
-                    offset,
-                    name: "[padding]",
-                    size: self.size - offset,
-                },
-            )?;
         }
 
         Ok(())
