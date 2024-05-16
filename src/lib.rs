@@ -69,16 +69,16 @@ use std::borrow::Cow;
 use std::fmt::{self, Display};
 use std::str;
 
-pub use type_layout_derive::TypeLayout;
-
 #[doc(hidden)]
 pub use memoffset;
+
+pub use type_layout_derive::TypeLayout;
 
 pub trait TypeLayout {
     fn type_layout() -> TypeLayoutInfo;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeLayoutInfo {
     pub name: Cow<'static, str>,
@@ -87,7 +87,7 @@ pub struct TypeLayoutInfo {
     pub fields: Vec<Field>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub enum Field {
     Field {

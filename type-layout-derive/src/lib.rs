@@ -3,8 +3,8 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 
 use proc_macro2::{Ident, Literal};
-use quote::{quote, quote_spanned, ToTokens};
-use syn::{parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields};
+use quote::{quote, quote_spanned};
+use syn::{Data, DeriveInput, Fields, parse_macro_input, spanned::Spanned, TypeGenerics};
 
 #[proc_macro_derive(TypeLayout)]
 pub fn derive_type_layout(input: TokenStream) -> TokenStream {
@@ -13,10 +13,9 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
 
     // Used in the quasi-quotation below as `#name`.
     let name = input.ident;
-    let name_str = Literal::string(&name.to_string());
 
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let layout = layout_of_type(&name, &input.data);
+    let layout = layout_of_type(&name, &ty_generics, &input.data);
 
     // Build the output, possibly using quasi-quotation
     let expanded = quote! {
@@ -28,9 +27,9 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
                 #layout
 
                 ::type_layout::TypeLayoutInfo {
-                    name: ::std::borrow::Cow::Borrowed(#name_str),
-                    size: std::mem::size_of::<#name>(),
-                    alignment: ::std::mem::align_of::<#name>(),
+                    name: ::std::borrow::Cow::Borrowed(::std::any::type_name::<Self>()),
+                    size: std::mem::size_of::<#name #ty_generics>(),
+                    alignment: ::std::mem::align_of::<#name #ty_generics>(),
                     fields,
                 }
             }
@@ -41,7 +40,7 @@ pub fn derive_type_layout(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-fn layout_of_type(struct_name: &Ident, data: &Data) -> proc_macro2::TokenStream {
+fn layout_of_type(struct_name: &Ident, ty_generics: &TypeGenerics, data: &Data) -> proc_macro2::TokenStream {
     match data {
         Data::Struct(data) => match &data.fields {
             Fields::Named(fields) => {
@@ -49,13 +48,12 @@ fn layout_of_type(struct_name: &Ident, data: &Data) -> proc_macro2::TokenStream 
                     let field_name = field.ident.as_ref().unwrap();
                     let field_name_str = Literal::string(&field_name.to_string());
                     let field_ty = &field.ty;
-                    let field_ty_str = Literal::string(&field_ty.to_token_stream().to_string());
 
                     quote_spanned! { field.span() =>
                         #[allow(unused_assignments)]
                         {
                             let size = ::std::mem::size_of::<#field_ty>();
-                            let offset = ::type_layout::memoffset::offset_of!(#struct_name, #field_name);
+                            let offset = ::type_layout::memoffset::offset_of!(#struct_name #ty_generics, #field_name);
 
                             if offset > last_field_end {
                                 fields.push(::type_layout::Field::Padding {
@@ -65,7 +63,7 @@ fn layout_of_type(struct_name: &Ident, data: &Data) -> proc_macro2::TokenStream 
 
                             fields.push(::type_layout::Field::Field {
                                 name: ::std::borrow::Cow::Borrowed(#field_name_str),
-                                ty: ::std::borrow::Cow::Borrowed(#field_ty_str),
+                                ty: ::std::borrow::Cow::Borrowed(::std::any::type_name::<#field_ty>()),
                                 size,
                             });
 
